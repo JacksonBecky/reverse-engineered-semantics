@@ -1,0 +1,232 @@
+#Simulations for all Architectures with or without Control (uncomment where suggested in red for each architecture and to add or remove the requirement for control, comments are shown in italics and should not be uncommented)
+
+# source the procedure to save the activation patterns (see below)
+source my_procs.tcl
+
+#set up the basic network and the timing
+addNet hier -i 6 -t 4 CONTINUOUS
+
+#add in the input units for the spoke layer
+addGroup m1 12 INPUT
+addGroup m2 12 INPUT
+addGroup m3 12 INPUT
+
+#add in the Control Layer
+#TURN ON FOR SIMULATIONS WITH CONTROL
+#addGroup Control 3 INPUT
+
+#add in the output units for the spoke layer
+addGroup m1rep 12 OUTPUT CROSS_ENTROPY -BIASED 
+addGroup m2rep 12 OUTPUT CROSS_ENTROPY -BIASED
+addGroup m3rep 12 OUTPUT CROSS_ENTROPY -BIASED
+
+#add in the subregions of Hidden Layer 1
+#TURN ON FOR SHALLOW ARCHITECTURES
+#addGroup m1m2 10
+#addGroup m2m1 10
+#addGroup m1m3 10
+#addGroup m3m1 10
+#addGroup m2m3 10
+#addGroup m3m2 10
+
+#add in the subregions of Hidden Layer 1 and Hidden Layer 2
+#TURN ON FOR DEEP ARCHITECTURES
+#addGroup m1m2 7
+#addGroup m2m1 7
+#addGroup m1m3 7
+#addGroup m3m1 7
+#addGroup m2m3 7
+#addGroup m3m2 7
+#addGroup HL2 18
+
+#Set biases on feature units to -3
+connectGroups bias m1rep -m -3 -r 0
+connectGroups bias m2rep -m -3 -r 0
+connectGroups bias m3rep -m -3 -r 0
+#Make sure biases on feature units can't learn
+freezeWeights -g {m1rep m2rep m3rep} -t bias
+#Connect input features to corresponding feature units with
+#a weight of +6, so net input for active features will be
+#+3 and for inactive features will be -3
+connectGroups m1 m1rep -p ONE_TO_ONE -m 6 -r 0
+connectGroups m2 m2rep -p ONE_TO_ONE -m 6 -r 0
+connectGroups m3 m3rep -p ONE_TO_ONE -m 6 -r 0
+
+#Add self-connections among feature units
+connectGroups m1rep m1rep
+connectGroups m2rep m2rep
+connectGroups m3rep m3rep
+
+#TURN ON FOR SIMULATIONS WITH CONTROL
+#Connect control to the Spokes Layer and Hidden Layer 1
+#connectGroups Control m1rep
+#connectGroups Control m2rep
+#connectGroups Control m3rep
+#connectGroups Control m1m2
+#connectGroups Control m1m3
+#connectGroups Control m2m1
+#connectGroups Control m2m3
+#connectGroups Control m3m1
+#connectGroups Control m3m2
+
+#TURN ON FOR DEEP SIMULATIONS WITH CONTROL
+#Connect control to Hidden Layer 2
+#connectGroups Control HL2
+
+#For each architecture add necessary connections within and between hidden unit layers with resource matching 
+#TURN ON FOR SPOKES-ONLY ARCHITECTURE ONLY
+#add direct paths between the different modalities in the Spokes Layer
+#connectGroups m1rep m2rep -bi
+#connectGroups m1rep m3rep -bi
+#connectGroups m2rep m3rep –bi
+#add connections between units associated with same sensory modality within Hidden Layer 1
+#connectGroups m1m2 m1m2 -p RANDOM -s 0.28
+#connectGroups m1m3 m1m3 -p RANDOM -s 0.28
+#connectGroups m2m1 m2m1 -p RANDOM -s 0.28
+#connectGroups m2m3 m2m3 -p RANDOM -s 0.28
+#connectGroups m3m1 m3m1 -p RANDOM -s 0.28
+#connectGroups m3m2 m3m2 -p RANDOM -s 0.28
+#connectGroups m1m2 m1m3 -bi -p RANDOM -s 0.28
+#connectGroups m2m1 m2m3 -bi -p RANDOM -s 0.28
+#connectGroups m3m1 m3m2 -bi -p RANDOM -s 0.28
+
+#TURN ON FOR BIMODAL HUBS AND CONVERGENT HUBS AND CONVERGENT HUB-PLUS-SHORTCUT ARCHITECTURES ONLY
+#add connections within a subregion and create bimodal hubs in Hidden Layer 1
+#connectGroups m1m2 m1m2
+#connectGroups m1m3 m1m3
+#connectGroups m2m1 m2m1
+#connectGroups m2m3 m2m3
+#connectGroups m3m1 m3m1
+#connectGroups m3m2 m3m2
+#connectGroups m1m2 m2m1 -bi
+#connectGroups m1m3 m3m1 -bi
+#connectGroups m2m3 m3m2 –bi
+
+#TURN ON FOR SHALLOW MULTIMODAL HUB ARCHITECTURE ONLY
+#add connections within and between subregions to create one coherent multimodal hub in Hidden Layer 1
+#connectGroups m1m2 m1m2 -p RANDOM -s 0.333333
+#connectGroups m1m3 m1m3 -p RANDOM -s 0.333333
+#connectGroups m2m1 m2m1 -p RANDOM -s 0.333333
+#connectGroups m2m3 m2m3 -p RANDOM -s 0.333333
+#connectGroups m3m1 m3m1 -p RANDOM -s 0.333333
+#connectGroups m3m2 m3m2 -p RANDOM -s 0.333333
+#connectGroups m1m2 m2m1 -bi -p RANDOM -s 0.333333
+#connectGroups m1m2 m1m3 -bi -p RANDOM -s 0.333333
+#connectGroups m1m2 m2m3 -bi -p RANDOM -s 0.333333
+#connectGroups m1m2 m3m2 -bi -p RANDOM -s 0.333333
+#connectGroups m1m2 m3m1 -bi -p RANDOM -s 0.333333
+#connectGroups m2m1 m1m3 -bi -p RANDOM -s 0.333333
+#connectGroups m2m1 m2m3 -bi -p RANDOM -s 0.333333
+#connectGroups m2m1 m3m2 -bi -p RANDOM -s 0.333333
+#connectGroups m2m1 m3m1 -bi -p RANDOM -s 0.333333
+#connectGroups m1m3 m3m1 -bi -p RANDOM -s 0.333333
+#connectGroups m1m3 m3m2 -bi -p RANDOM -s 0.333333
+#connectGroups m1m3 m2m3 -bi -p RANDOM -s 0.333333
+#connectGroups m3m1 m3m2 -bi -p RANDOM -s 0.333333
+#connectGroups m3m1 m2m3 -bi -p RANDOM -s 0.333333
+#connectGroups m3m2 m2m3 -bi -p RANDOM -s 0.333333
+
+#TURN ON FOR DEEP ARCHITECTURES ONLY
+#connect units within Hidden Layer 2
+#connectGroups HL2 HL2
+
+#TURN ON FOR DEEP MULTIMODAL HUB & MULTIMODAL HUB-PLUS-SHORTCUT ARCHITECTURES ONLY
+#add connections between units associated with the same sensory modality within Hidden Layer 1
+#connectGroups m1m2 m1m2 -p RANDOM -s 0.5
+#connectGroups m1m3 m1m3 -p RANDOM -s 0.5
+#connectGroups m2m1 m2m1 -p RANDOM -s 0.5
+#connectGroups m2m3 m2m3 -p RANDOM -s 0.5
+#connectGroups m3m1 m3m1 -p RANDOM -s 0.5
+#connectGroups m3m2 m3m2 -p RANDOM -s 0.5
+#connectGroups m1m2 m1m3 -bi -p RANDOM -s 0.5
+#connectGroups m2m1 m2m3 -bi -p RANDOM -s 0.5
+#connectGroups m3m1 m3m2 -bi -p RANDOM -s 0.5
+
+#TURN ON FOR DEEP MULTIMODAL HUB ARCHITECTURE ONLY
+#connect each subregion of Hidden layer 1 to Hidden Layer 2
+#connectGroups m1m2 HL2 -bi -p RANDOM -s 0.670634920634921 
+#connectGroups m2m1 HL2 -bi -p RANDOM -s 0.670634920634921
+#connectGroups m1m3 HL2 -bi -p RANDOM -s 0.670634920634921
+#connectGroups m3m1 HL2 -bi -p RANDOM -s 0.670634920634921
+#connectGroups m2m3 HL2 -bi -p RANDOM -s 0.670634920634921
+#connectGroups m3m2 HL2 -bi -p RANDOM -s 0.670634920634921
+
+#TURN ON FOR MULTIMODAL HUB-PLUS-SHORTCUT ARCHITECTURE ONLY
+#connect each subregion of Hidden layer 1 to Hidden Layer 2
+#connectGroups m1m2 HL2 -bi -p RANDOM -s 0.634920635
+#connectGroups m2m1 HL2 -bi -p RANDOM -s 0.634920635
+#connectGroups m1m3 HL2 -bi -p RANDOM -s 0.634920635
+#connectGroups m3m1 HL2 -bi -p RANDOM -s 0.634920635
+#connectGroups m2m3 HL2 -bi -p RANDOM -s 0.634920635
+#connectGroups m3m2 HL2 -bi -p RANDOM -s 0.634920635
+
+#TURN ON FOR CONVERGENT HUB ARCHITECTURE ONLY
+#connect each subregion of Hidden layer 1 to Hidden Layer 2
+#connectGroups m1m2 HL2 -bi -p RANDOM -s 0.476190476
+#connectGroups m2m1 HL2 -bi -p RANDOM -s 0.476190476
+#connectGroups m1m3 HL2 -bi -p RANDOM -s 0.476190476
+#connectGroups m3m1 HL2 -bi -p RANDOM -s 0.476190476
+#connectGroups m2m3 HL2 -bi -p RANDOM -s 0.476190476
+#connectGroups m3m2 HL2 -bi -p RANDOM -s 0.476190476
+
+#TURN ON FOR CONVERGENT HUB-PLUS-SHORTCUT ARCHITECTURE ONLY
+#connect each subregion of Hidden layer 1 to Hidden Layer 2
+#connectGroups m1m2 HL2 -bi -p RANDOM -s 0.44047619047619
+#connectGroups m2m1 HL2 -bi -p RANDOM -s 0.44047619047619
+#connectGroups m1m3 HL2 -bi -p RANDOM -s 0.44047619047619
+#connectGroups m3m1 HL2 -bi -p RANDOM -s 0.44047619047619
+#connectGroups m2m3 HL2 -bi -p RANDOM -s 0.44047619047619
+#connectGroups m3m2 HL2 -bi -p RANDOM -s 0.44047619047619
+
+#TURN ON FOR MULTIMODAL HUB-PLUS-SHORTCUT AND CONVERGENT HUB-PLUS-SHORTCUT ARCHITECTURES ONLY
+#add shortcut connections between the Spokes Layer and Hidden Layer 2
+#connectGroups m1rep HL2 -bi -p RANDOM -s 0.041666667
+#connectGroups m2rep HL2 -bi -p RANDOM -s 0.041666667
+#connectGroups m3rep HL2 -bi -p RANDOM -s 0.041666667
+
+#connect the Spokes Layer to Hidden Layer 1
+connectGroups m1rep m1m2 -bi
+connectGroups m1rep m1m3 -bi
+connectGroups m2rep m2m1 -bi
+connectGroups m2rep m2m3 -bi
+connectGroups m3rep m3m1 -bi
+connectGroups m3rep m3m2 –bi
+
+#Provide the examples file as the training and testing set (see below)
+#TURN ON FOR SIMULATIONS WITHOUT CONTROL ONLY
+loadExamples examples_no_control.ex -exmode PER -set train
+loadExamples examples_no_control.ex -exmod ORD -set test
+
+#TURN ON FOR SIMULATIONS WITH CONTROL ONLY
+#loadExamples hier_examples_control.ex -exmode PER -set train
+#loadExamples hier_examples_control.ex -exmod ORD -set test
+
+#Set the training parameters
+setObj learningRate 0.001
+setObj numUpdates 500000
+setObj weightDecay 0.0001
+
+#Training will stop when output units are less than 0.2 from target
+setObj trainGroupCrit 0.2
+
+#Start training using gradient descent
+train -a steepest
+
+#once training has finished save the results
+#TURN ON FOR SHALLOW SIMULATIONS
+#testAllActs results.txt {m1rep m2rep m3rep m1m2 m2m1 m1m3 m3m1 m2m3 m3m2}
+#TURN ON FOR DEEP SIMULATIONS
+#testAllActs results.txt {m1rep m2rep m3rep m1m2 m2m1 m1m3 m3m1 m2m3 m3m2 HL2}
+
+#TURN ON FOR CONTROL SIMULATIONS 
+#save weights from control in a different file per location
+#freezeWeights 
+#thawWeights -g {m1rep m2rep m3rep} -t Control
+#saveWeights control_to_spokes_weights.wt -t  -noFrozen
+#freezeWeights 
+#thawWeights -g {m1m2 m2m1 m1m3 m3m1 m2m3 m3m2} -t Control
+#saveWeights control_to_HL1_weights.wt -t  -noFrozen
+#TURN ON FOR DEEP CONTROLLED SIMULATIONS
+#freezeWeights 
+#thawWeights -g {atl} -t Control
+#saveWeights control_to_HL2_weights.wt -t  -noFrozen

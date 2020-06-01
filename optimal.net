@@ -1,0 +1,120 @@
+#simulate optimal model - deep multimodal hub with shortcut connections and control connected to the spokes
+#can do standard version or add negative biases on the hidden units for simulation of functional connectivity
+
+#set up the basic network and the timing
+addNet hier -i 6 -t 4 CONTINUOUS
+
+#add in the input units for the spoke layer
+addGroup m1 12 INPUT
+addGroup m2 12 INPUT
+addGroup m3 12 INPUT
+
+#add in the Control Layer
+addGroup Control 3 INPUT
+
+#add in the output units for the spoke layer
+addGroup m1rep 12 OUTPUT CROSS_ENTROPY -BIASED 
+addGroup m2rep 12 OUTPUT CROSS_ENTROPY -BIASED
+addGroup m3rep 12 OUTPUT CROSS_ENTROPY -BIASED
+
+#add in the subregions of Hidden Layer 1 and Hidden Layer 2 - exclude these if doing functional connectivity version
+addGroup m1m2 7
+addGroup m2m1 7
+addGroup m1m3 7
+addGroup m3m1 7
+addGroup m2m3 7
+addGroup m3m2 7
+addGroup HL2 18
+
+#for  functional connectivity version only add hidden layers without bias to add negative bias after
+#addGroup m1m2 7 -BIASED 
+#addGroup m2m1 7 -BIASED 
+#addGroup m1m3 7 -BIASED 
+#addGroup m3m1 7 -BIASED 
+#addGroup m2m3 7 -BIASED 
+#addGroup m3m2 7 -BIASED 
+#addGroup atl 18 -BIASED 
+
+#Set biases on feature units to -3
+connectGroups bias m1rep -m -3 -r 0
+connectGroups bias m2rep -m -3 -r 0
+connectGroups bias m3rep -m -3 -r 0
+
+#Set bias on HLs for negative bias version for functional connectivity only 
+#connectGroups bias m1m2 -m -4 -r 0
+#connectGroups bias m2m1 -m -4 -r 0
+#connectGroups bias m1m3 -m -4 -r 0
+#connectGroups bias m3m1 -m -4 -r 0
+#connectGroups bias m2m3 -m -4 -r 0
+#connectGroups bias m3m2 -m -4 -r 0
+#connectGroups bias atl -m -4 -r 0
+
+#Make sure biases on feature units can't learn
+freezeWeights -g {m1rep m2rep m3rep} -t bias
+#Connect input features to corresponding feature units with
+#a weight of +6, so net input for active features will be
+#+3 and for inactive features will be -3
+connectGroups m1 m1rep -p ONE_TO_ONE -m 6 -r 0
+connectGroups m2 m2rep -p ONE_TO_ONE -m 6 -r 0
+connectGroups m3 m3rep -p ONE_TO_ONE -m 6 -r 0
+
+#Add self-connections among feature units
+connectGroups m1rep m1rep
+connectGroups m2rep m2rep
+connectGroups m3rep m3rep
+
+#Connect control to the Spokes Layer 
+connectGroups Control m1rep -p RANDOM -s 0.5
+connectGroups Control m2rep -p RANDOM -s 0.5
+connectGroups Control m3rep -p RANDOM -s 0.5
+
+#For each architecture add necessary connections within and between hidden unit layers with resource matching 
+#connect units within Hidden Layer 2
+connectGroups HL2 HL2
+
+#add connections between units associated with the same sensory modality within Hidden Layer 1
+connectGroups m1m2 m1m2 -p RANDOM -s 0.5
+connectGroups m1m3 m1m3 -p RANDOM -s 0.5
+connectGroups m2m1 m2m1 -p RANDOM -s 0.5
+connectGroups m2m3 m2m3 -p RANDOM -s 0.5
+connectGroups m3m1 m3m1 -p RANDOM -s 0.5
+connectGroups m3m2 m3m2 -p RANDOM -s 0.5
+connectGroups m1m2 m1m3 -bi -p RANDOM -s 0.5
+connectGroups m2m1 m2m3 -bi -p RANDOM -s 0.5
+connectGroups m3m1 m3m2 -bi -p RANDOM -s 0.5
+
+#connect each subregion of Hidden layer 1 to Hidden Layer 2
+connectGroups m1m2 HL2 -bi -p RANDOM -s 0.634920635
+connectGroups m2m1 HL2 -bi -p RANDOM -s 0.634920635
+connectGroups m1m3 HL2 -bi -p RANDOM -s 0.634920635
+connectGroups m3m1 HL2 -bi -p RANDOM -s 0.634920635
+connectGroups m2m3 HL2 -bi -p RANDOM -s 0.634920635
+connectGroups m3m2 HL2 -bi -p RANDOM -s 0.634920635
+
+#add shortcut connections between the Spokes Layer and Hidden Layer 2
+connectGroups m1rep HL2 -bi -p RANDOM -s 0.041666667
+connectGroups m2rep HL2 -bi -p RANDOM -s 0.041666667
+connectGroups m3rep HL2 -bi -p RANDOM -s 0.041666667
+
+#connect the Spokes Layer to Hidden Layer 1
+connectGroups m1rep m1m2 -bi
+connectGroups m1rep m1m3 -bi
+connectGroups m2rep m2m1 -bi
+connectGroups m2rep m2m3 -bi
+connectGroups m3rep m3m1 -bi
+connectGroups m3rep m3m2 –bi
+
+#load test and train set examples
+loadExamples hier_examples_basic_control.ex -exmode PER -set train
+loadExamples hier_examples_basic_control.ex -exmod ORD -set test
+
+#Set the training parameters
+setObj learningRate 0.001
+setObj numUpdates 500000
+setObj weightDecay 0.0001
+
+#Training will stop when output units are less than 0.2 from target
+setObj trainGroupCrit 0.2
+
+#Start training using gradient descent
+train -a steepest
